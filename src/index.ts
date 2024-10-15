@@ -1,9 +1,12 @@
 import express, { Request, Response } from "express";
 import "dotenv/config";
 
-import { mongoose } from "./dataSource";
+import { mongoose, redis } from "./dataSource";
 import { logger } from "./infrastructure";
 import { notFoundMiddleware } from "./middlewares";
+import { authMiddleware } from "./middlewares/authMiddleware";
+import { router } from "./routes";
+import { contextMiddleware } from "./middlewares/contextMiddleware";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,12 +16,14 @@ app.use(
 	express.json({ limit: "10mb" }),
 	express.urlencoded({ limit: "10mb", extended: true }),
 	// corsMiddleware,
-	// authMiddleware,
-	// router,
+	contextMiddleware,
+	authMiddleware,
+	router,
 	notFoundMiddleware
 );
 
 mongoose.run();
+redis.run();
 
 // Routes
 app.get("/", (req: Request, res: Response) => {

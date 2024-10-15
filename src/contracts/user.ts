@@ -1,17 +1,5 @@
 import { Model, ObjectId } from 'mongoose'
 
-export interface IVerification {
-  email: string
-  accessToken: string
-  expiresIn: Date
-  user: ObjectId
-}
-
-export interface IResetPassword {
-  accessToken: string
-  expiresIn: Date
-  user: ObjectId
-}
 
 export enum UserRole {
     CUSTOMER = 'customer',
@@ -25,9 +13,6 @@ export interface IUser {
   role: UserRole
   firstName?: string
   lastName?: string
-  verified: boolean
-  verifications?: ObjectId[]
-  resetPasswords?: ObjectId[]
 }
 
 export interface IUserMethods {
@@ -35,8 +20,6 @@ export interface IUserMethods {
 }
 
 export type UserModel = Model<IUser, unknown, IUserMethods>
-
-export type VerificationRequestPayload = Pick<IUser, 'email'>
 
 export type UpdateProfilePayload = Required<
   Pick<IUser, 'firstName' | 'lastName'>

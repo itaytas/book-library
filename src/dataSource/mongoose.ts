@@ -5,7 +5,9 @@ export const mongoose = {
 	run: async () => {
         try {
             logger.info(`Starting Mongo... [${process.env.MONGODB_URI}]`);
-			return await connect(process.env.MONGODB_URI || "");
+			return await connect(
+				process.env.MONGODB_URI || "mongodb://localhost:27017/book-library?authSource=admin"
+			);
 		} catch (error) {
 			logger.error(error);
 		}

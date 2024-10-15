@@ -1,31 +1,27 @@
 import { NextFunction, Response } from 'express'
 import { StatusCodes, ReasonPhrases } from 'http-status-codes'
 import { IContextRequest, IUserRequest } from '../contracts/request'
-import { UserRole } from '../contracts/user' // Assuming UserRole is defined in your user model
+import { UserRole } from '../contracts/user'
 
-// The roleGuard middleware will provide functions to check user roles
 export const roleGuard = {
-  // Check if the user has a specific role
   hasRole: (requiredRole: UserRole) => {
     return (
-      { context: { user, accessToken } }: IContextRequest<IUserRequest>, // Destructure accessToken as well
+      { context: { user, accessToken } }: IContextRequest<IUserRequest>, 
       res: Response,
       next: NextFunction
     ) => {
-      // Check if the user is authenticated
-      if (!user || !accessToken) { // Ensure user and accessToken are present
+      
+      if (!user || !accessToken) { 
         return res.status(StatusCodes.UNAUTHORIZED).json({
           message: ReasonPhrases.UNAUTHORIZED,
           status: StatusCodes.UNAUTHORIZED,
         })
       }
 
-      // Check if the user's role matches the required role
       if (user.role === requiredRole) {
         return next() 
       }
 
-      // If the user does not have the required role, respond with a forbidden status
       return res.status(StatusCodes.FORBIDDEN).json({
         message: ReasonPhrases.FORBIDDEN,
         status: StatusCodes.FORBIDDEN,
@@ -33,18 +29,16 @@ export const roleGuard = {
     }
   },
 
-  // Check if the user is a Customer
   isCustomer: (
-    req: IContextRequest<IUserRequest>, // Accept the request object
+    req: IContextRequest<IUserRequest>, 
     res: Response,
     next: NextFunction
   ) => {
     return roleGuard.hasRole(UserRole.CUSTOMER)(req, res, next) 
   },
 
-  // Check if the user is an Employee
   isEmployee: (
-    req: IContextRequest<IUserRequest>, // Accept the request object
+    req: IContextRequest<IUserRequest>, 
     res: Response,
     next: NextFunction
   ) => {

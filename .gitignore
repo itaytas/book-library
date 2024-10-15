@@ -6,3 +6,4 @@ public
 storage/public
 package-lock.json
 yarn.lock
+dist

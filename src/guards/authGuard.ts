@@ -1,74 +1,30 @@
-import { NextFunction, Response } from 'express'
-import { StatusCodes, ReasonPhrases } from 'http-status-codes'
+import { Request, Response, NextFunction } from "express";
+import { StatusCodes, ReasonPhrases } from "http-status-codes";
 
-import { IContextRequest, IUserRequest } from '../contracts/request'
+import { IContextRequest, IUserRequest } from "../contracts/request";
 
 export const authGuard = {
-  isAuth: (
-    { context: { user } }: IContextRequest<IUserRequest>,
-    res: Response,
-    next: NextFunction
-  ) => {
-    if (user) {
-      return next()
-    }
+	isAuth: (req: Request, res: Response, next: NextFunction) => {
+		const { user } = (req as IContextRequest<IUserRequest>).context;
+		if (user) {
+			return next();
+		}
 
-    return res.status(StatusCodes.UNAUTHORIZED).json({
-      message: ReasonPhrases.UNAUTHORIZED,
-      status: StatusCodes.UNAUTHORIZED
-    })
-  },
+		res.status(StatusCodes.UNAUTHORIZED).json({
+			message: ReasonPhrases.UNAUTHORIZED,
+			status: StatusCodes.UNAUTHORIZED,
+		});
+	},
 
-  isGuest: (
-    { context: { user } }: IContextRequest<IUserRequest>,
-    res: Response,
-    next: NextFunction
-  ) => {
-    if (!user) {
-      return next()
-    }
+	isGuest: (req: Request, res: Response, next: NextFunction) => {
+		const { user } = (req as IContextRequest<IUserRequest>).context;
+		if (!user) {
+			return next();
+		}
 
-    return res.status(StatusCodes.FORBIDDEN).json({
-      message: ReasonPhrases.FORBIDDEN,
-      status: StatusCodes.FORBIDDEN
-    })
-  },
-
-  isVerified: (
-    {
-      context: {
-        user: { verified }
-      }
-    }: IContextRequest<IUserRequest>,
-    res: Response,
-    next: NextFunction
-  ) => {
-    if (verified) {
-      return next()
-    }
-
-    return res.status(StatusCodes.FORBIDDEN).json({
-      message: ReasonPhrases.FORBIDDEN,
-      status: StatusCodes.FORBIDDEN
-    })
-  },
-
-  isUnverfied: (
-    {
-      context: {
-        user: { verified }
-      }
-    }: IContextRequest<IUserRequest>,
-    res: Response,
-    next: NextFunction
-  ) => {
-    if (!verified) {
-      return next()
-    }
-
-    return res.status(StatusCodes.FORBIDDEN).json({
-      message: ReasonPhrases.FORBIDDEN,
-      status: StatusCodes.FORBIDDEN
-    })
-  }
-}
+		res.status(StatusCodes.FORBIDDEN).json({
+			message: ReasonPhrases.FORBIDDEN,
+			status: StatusCodes.FORBIDDEN,
+		});
+	},
+};
