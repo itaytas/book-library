@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { loanService } from "../services/loanService";
+import { IUserRequest } from "@/contracts/request";
 
 export const loanController = {
   viewLoans: async (req: Request, res: Response) => {
@@ -15,9 +16,18 @@ export const loanController = {
     }
   },
 
-  viewUserLoans: async (req: Request, res: Response) => {
+  viewMyLoans: async (req: Request, res: Response) => {
+    const { user } = req.context as IUserRequest;
+    loanController.viewLoansByUserId(user.id, res);
+  },
+
+  viewUserLoans: async ({ params: { userId } }: Request, res: Response) => {
+    loanController.viewLoansByUserId(userId, res);
+  },
+
+  viewLoansByUserId: async (userId: string, res: Response) => {
     try {
-      const loans = await loanService.getLoansByUser(req.params.userId);
+      const loans = await loanService.getLoansByUser(userId);
       res.status(StatusCodes.OK).json(loans);
     } catch (error) {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

@@ -1,4 +1,4 @@
-// services/loanService.ts
+import { LoanDueDate } from "../constants";
 import { LoanBookPayload, ReturnBookPayload } from "../contracts/loan";
 import { Book, Loan } from "../models";
 
@@ -52,13 +52,13 @@ export const loanService = {
 
     switch (rating) {
       case 5:
-        days = 2;
+        days = LoanDueDate.Rating5;
         break;
       case 4:
-        days = 3;
+        days = LoanDueDate.Rating4;
         break;
       default:
-        days = 7;
+        days = LoanDueDate.DefaultRating;
         break;
     }
 
