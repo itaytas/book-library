@@ -7,7 +7,7 @@ import { notFoundMiddleware } from "./middlewares";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { router } from "./routes";
 import { contextMiddleware } from "./middlewares/contextMiddleware";
-import { seedUsers } from "./scripts/startup"; // Import the seeding function
+import { seedStartupData } from "./scripts/startup"; // Import the seeding function
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,7 +27,7 @@ app.use(
 (async () => {
   try {
     await mongoose.run();
-    await seedUsers(); // Seed users after the database connection is established
+    await seedStartupData(); // Seed users after the database connection is established
     redis.run();
   } catch (error) {
     logger.error("Error initializing the application:", error);

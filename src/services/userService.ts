@@ -15,20 +15,6 @@ export const userService = {
 
 	isExistByEmail: (email: string) => User.exists({ email }),
 
-	// updatePasswordByUserId: (userId: ObjectId, password: string, session?: ClientSession) => {
-	// 	const data = [{ _id: userId }, { password }];
-
-	// 	let params = null;
-
-	// 	if (session) {
-	// 		params = [...data, { session }];
-	// 	} else {
-	// 		params = data;
-	// 	}
-
-	// 	return User.updateOne(...params);
-	// },
-
 	updateProfileByUserId: (
 		userId: ObjectId,
 		{ firstName, lastName }: { firstName: string; lastName: string },
