@@ -83,7 +83,6 @@ export const authController = {
 
 	signOut: async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			console.log(req);
 			const { user, accessToken } = req.context as IUserRequest;
 
 			if (redis.client) {

@@ -12,17 +12,18 @@ export const roleGuard = {
     ) => {
       
       if (!user || !accessToken) { 
-        return res.status(StatusCodes.UNAUTHORIZED).json({
+        res.status(StatusCodes.UNAUTHORIZED).json({
           message: ReasonPhrases.UNAUTHORIZED,
           status: StatusCodes.UNAUTHORIZED,
         })
+        return;
       }
 
       if (user.role === requiredRole) {
         return next() 
       }
 
-      return res.status(StatusCodes.FORBIDDEN).json({
+      res.status(StatusCodes.FORBIDDEN).json({
         message: ReasonPhrases.FORBIDDEN,
         status: StatusCodes.FORBIDDEN,
       })
