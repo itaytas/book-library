@@ -42,7 +42,10 @@ export const authController = {
 		}
 	},
 
-	signUp: async ({ body: { email, password } }: IBodyRequest<SignUpPayload>, res: Response) => {
+	signUp: async (
+		{ body: { email, password, role, firstName, lastName } }: IBodyRequest<SignUpPayload>,
+		res: Response
+	) => {
 		try {
 			const isUserExist = await userService.isExistByEmail(email);
 
@@ -56,12 +59,13 @@ export const authController = {
 
 			const hashedPassword = await createHash(password);
 
-			const user = await userService.create(
-				{
-					email,
-					password: hashedPassword,
-				},
-			);
+			const user = await userService.create({
+				email,
+				password: hashedPassword,
+				firstName,
+				lastName,
+				role,
+			});
 
 			const { accessToken } = jwtSign(user.id);
 

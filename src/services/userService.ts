@@ -3,10 +3,25 @@ import { ClientSession, ObjectId } from "mongoose";
 import { User } from "../models";
 
 export const userService = {
-	create: ({ email, password }: { email: string; password: string }) =>
+	create: ({
+		email,
+		password,
+		firstName,
+		lastName,
+		role,
+	}: {
+		email: string;
+		password: string;
+		firstName: String;
+		lastName: String;
+		role: String;
+	}) =>
 		new User({
 			email,
 			password,
+			firstName,
+			lastName,
+			role,
 		}).save(),
 
 	getById: (userId: ObjectId) => User.findById(userId),

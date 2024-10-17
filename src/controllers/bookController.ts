@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { bookService } from "../services/bookService";
+import { bookService } from "../services";
 import { isValidObjectId } from "mongoose";
 import { UserRole } from "../contracts/user";
 import { IUserRequest } from "../contracts/request";

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { loanService } from "../services/loanService";
-import { IUserRequest } from "@/contracts/request";
+import { loanService } from "../services";
+import { IUserRequest } from "../contracts/request";
 import { UserRole } from "../contracts/user";
 
 export const loanController = {

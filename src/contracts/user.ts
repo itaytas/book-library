@@ -11,8 +11,8 @@ export interface IUser {
   email: string
   password: string
   role: UserRole
-  firstName?: string
-  lastName?: string
+  firstName: string
+  lastName: string
 }
 
 export interface IUserMethods {
