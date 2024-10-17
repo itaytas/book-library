@@ -53,24 +53,23 @@ export const loanController = {
 			});
 		} catch (error) {
 			res.status(StatusCodes.BAD_REQUEST).json({
-				message: error || "An error occurred",
+				message: (error as Error).message || "An error occurred",
 				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 	},
 
-	returnBook: async ({ context, body: { loanId } }: Request, res: Response) => {
+	returnBook: async ({ body: { loanId } }: Request, res: Response) => {
 		try {
-			const { user } = context as IUserRequest;
 			const loan = await loanService.returnBook({ loanId });
 			res.status(StatusCodes.OK).json({
-				data: user.role === UserRole.CUSTOMER ? loanService.getLoanDtoForCustomer(loan) : loan,
+				data: { loanId: loan.id, user: loan.user, returned: loan.returned },
 				message: "Book returned successfully",
 				status: StatusCodes.OK,
 			});
 		} catch (error) {
 			res.status(StatusCodes.BAD_REQUEST).json({
-				message: error || "An error occurred",
+				message: (error as Error).message || "An error occurred",
 				status: StatusCodes.BAD_REQUEST,
 			});
 		}
