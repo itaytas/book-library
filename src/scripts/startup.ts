@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { User, Book, Loan } from "../models";
 import { logger } from "../infrastructure";
 import { UserRole } from "../contracts/user";
+import { calculateDueDate } from "../utils/calculateDueDate";
 
 export async function seedStartupData() {
   try {
@@ -100,22 +101,20 @@ export async function seedStartupData() {
 
       // Fetch some customers and books for creating loan records
       const customers = await User.find({ role: UserRole.CUSTOMER });
-      console.log("🚀 ~ seedStartupData ~ customers:", customers.length)
       const books = await Book.find();
-      console.log("🚀 ~ seedStartupData ~ books:", books.length)
 
       if (customers.length > 0 && books.length > 0) {
         const loans = [
           {
             user: customers[0]._id,
             book: books[0]._id,
-            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 2 weeks from now
+            dueDate: calculateDueDate(books[0].rating),
             returned: false,
           },
           {
             user: customers[1]._id,
             book: books[1]._id,
-            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            dueDate: calculateDueDate(books[1].rating),
             returned: false,
           },
         ];

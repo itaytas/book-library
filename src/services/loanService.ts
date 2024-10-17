@@ -1,4 +1,4 @@
-import { LoanDueDate } from "../constants";
+import { calculateDueDate } from "../utils/calculateDueDate";
 import { LoanBookPayload, ReturnBookPayload } from "../contracts/loan";
 import { Book, Loan } from "../models";
 
@@ -17,7 +17,7 @@ export const loanService = {
       throw new Error("Book not available");
     }
 
-    const dueDate = loanService.calculateDueDate(book.rating);
+    const dueDate = calculateDueDate(book.rating);
 
     const loan = new Loan({
       user: userId,
@@ -46,23 +46,4 @@ export const loanService = {
     return await loan.save();
   },
 
-  calculateDueDate: (rating: number): Date => {
-    const currentDate = new Date();
-    let days = 0;
-
-    switch (rating) {
-      case 5:
-        days = LoanDueDate.Rating5;
-        break;
-      case 4:
-        days = LoanDueDate.Rating4;
-        break;
-      default:
-        days = LoanDueDate.DefaultRating;
-        break;
-    }
-
-    currentDate.setDate(currentDate.getDate() + days);
-    return currentDate;
-  },
 };
