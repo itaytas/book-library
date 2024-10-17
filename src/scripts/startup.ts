@@ -95,38 +95,38 @@ export async function seedStartupData() {
     }
 
     // Seed Loans
-    const existingLoans = await Loan.find();
-    if (existingLoans.length === 0) {
-      logger.info("No loans found. Creating default loans...");
+    // const existingLoans = await Loan.find();
+    // if (existingLoans.length === 0) {
+    //   logger.info("No loans found. Creating default loans...");
 
-      // Fetch some customers and books for creating loan records
-      const customers = await User.find({ role: UserRole.CUSTOMER });
-      const books = await Book.find();
+    //   // Fetch some customers and books for creating loan records
+    //   const customers = await User.find({ role: UserRole.CUSTOMER });
+    //   const books = await Book.find();
 
-      if (customers.length > 0 && books.length > 0) {
-        const loans = [
-          {
-            user: customers[0]._id,
-            book: books[0]._id,
-            dueDate: calculateDueDate(books[0].rating),
-            returned: false,
-          },
-          {
-            user: customers[1]._id,
-            book: books[1]._id,
-            dueDate: calculateDueDate(books[1].rating),
-            returned: false,
-          },
-        ];
+    //   if (customers.length > 0 && books.length > 0) {
+    //     const loans = [
+    //       {
+    //         user: customers[0]._id,
+    //         book: books[0]._id,
+    //         dueDate: calculateDueDate(books[0].rating),
+    //         returned: false,
+    //       },
+    //       {
+    //         user: customers[1]._id,
+    //         book: books[1]._id,
+    //         dueDate: calculateDueDate(books[1].rating),
+    //         returned: false,
+    //       },
+    //     ];
 
-        await Loan.insertMany(loans);
-        logger.info("Default loans created successfully.");
-      } else {
-        logger.warn("Not enough customers or books available to create loans.");
-      }
-    } else {
-      logger.info("Loans already exist in the database. Skipping loan seeding.");
-    }
+    //     await Loan.insertMany(loans);
+    //     logger.info("Default loans created successfully.");
+    //   } else {
+    //     logger.warn("Not enough customers or books available to create loans.");
+    //   }
+    // } else {
+    //   logger.info("Loans already exist in the database. Skipping loan seeding.");
+    // }
   } catch (error) {
     logger.error("Error seeding data: ", error);
   }
