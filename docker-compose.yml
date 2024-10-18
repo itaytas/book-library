@@ -17,6 +17,23 @@ services:
     volumes:
       - redis-data:/data
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: book-library-app
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/book-library?authSource=admin
+      REDIS_URI: redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - .:/app
+    command: npm start
+
 volumes:
   mongo-data:
   redis-data:
