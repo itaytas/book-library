@@ -1,15 +1,17 @@
 import request from "supertest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-import Redis from "ioredis-mock";
-import { closeServer, server } from "../src";
-import { userService } from "../src/services";
-import { jwtSign } from "../src/utils/jwt";
+// import Redis from "ioredis-mock";
+import {createClient} from 'redis-mock'
+import { createServer } from "..";
+import { userService } from "../services";
+import { jwtSign } from "../utils/jwt";
+import { Application } from "express";
 
-jest.mock("../src/dataSource", () => ({
+jest.mock("../dataSource", () => ({
 	redis: {
 		run: jest.fn(),
-		client: new Redis(),
+		client: createClient(),
 	},
 	mongoose: {
 		run: jest.fn(),
@@ -18,26 +20,39 @@ jest.mock("../src/dataSource", () => ({
 
 describe("Auth Routes", () => {
 	let mongoServer: MongoMemoryServer;
+	let app: Application;
+	let server: any;
 
 	beforeAll(async () => {
 		mongoServer = await MongoMemoryServer.create();
 		const mongoUri = mongoServer.getUri();
 		await mongoose.connect(mongoUri);
+		app = await createServer();
 	});
 
 	afterAll(async () => {
 		await mongoose.disconnect();
 		await mongoServer.stop();
-		await closeServer();
+		if (server) {
+			await new Promise((resolve) => server.close(resolve));
+		}
 	});
 
 	beforeEach(async () => {
 		await mongoose.connection.dropDatabase();
+		const PORT = Math.floor(3000 + Math.random() * 5000);
+		server = app.listen(PORT);
+	});
+
+	afterEach(async () => {
+		if (server) {
+			await new Promise((resolve) => server.close(resolve));
+		}
 	});
 
 	describe("POST /api/auth/sign-up", () => {
 		it("should create a new user and return an access token", async () => {
-			const response = await request(server).post("/api/auth/sign-up").send({
+			const response = await request(app).post("/api/auth/sign-up").send({
 				email: "test@example.com",
 				password: "password123",
 			});
@@ -55,7 +70,7 @@ describe("Auth Routes", () => {
 				role: "customer",
 			});
 
-			const response = await request(server).post("/api/auth/sign-up").send({
+			const response = await request(app).post("/api/auth/sign-up").send({
 				email: "customer1@example.com",
 				password: "customer123",
 			});
@@ -76,7 +91,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should sign in a user and return an access token", async () => {
-			const response = await request(server).post("/api/auth/sign-in").send({
+			const response = await request(app).post("/api/auth/sign-in").send({
 				email: "customer1@example.com",
 				password: "customer123",
 			});
@@ -86,7 +101,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should return 404 for non-existent user", async () => {
-			const response = await request(server).post("/api/auth/sign-in").send({
+			const response = await request(app).post("/api/auth/sign-in").send({
 				email: "nonexistent@example.com",
 				password: "password123",
 			});
@@ -106,7 +121,7 @@ describe("Auth Routes", () => {
 			});
 			const { accessToken } = jwtSign(user.id);
 
-			const response = await request(server)
+			const response = await request(app)
 				.get("/api/auth/sign-out")
 				.set("Authorization", `Bearer ${accessToken}`);
 
@@ -114,7 +129,7 @@ describe("Auth Routes", () => {
 		});
 
 		it("should return 401 for unauthenticated request", async () => {
-			const response = await request(server).get("/api/auth/sign-out");
+			const response = await request(app).get("/api/auth/sign-out");
 
 			expect(response.status).toBe(401);
 		});

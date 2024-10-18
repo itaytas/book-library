@@ -2,6 +2,7 @@
 import { Loan, Book } from "../models";
 import { AddBookPayload, IBook, UpdateBookPayload } from "../contracts/book";
 import { UserRole } from "../contracts/user";
+import { Schema } from "mongoose";
 
 export const bookService = {
 	getBooks: async (page: number, limit: number) => {
@@ -54,14 +55,33 @@ export const bookService = {
 		return bookByRole;
 	},
 
-	getBookDtoForCustomer: (book: IBook) => {
+	getBookClosestDueDate: async (bookId: Schema.Types.ObjectId): Promise<Date | null> => {
+		const availableAt = await Loan.find({
+			book: bookId,
+			returned: false,
+		})
+			.sort({ dueDate: 1 })
+			.limit(1)
+			.select("dueDate")
+			.lean();
+		return availableAt.length > 0 ? availableAt[0].dueDate : null;
+	},
+
+	getBookDtoForCustomer: async (book: IBook) => {
+		let availableAt: Date | null = null;
+		if (book.availableCopies === 0) {
+			availableAt = await bookService.getBookClosestDueDate(book.id);
+		}
+
 		return {
 			id: book.id,
 			title: book.title,
 			author: book.author,
 			genre: book.genre,
 			rating: book.rating,
-			availableCopies: book.availableCopies,
+			...(book.availableCopies > 0
+				? { availableCopies: book.availableCopies }
+				: { availableAt }), 
 		};
 	},
 };

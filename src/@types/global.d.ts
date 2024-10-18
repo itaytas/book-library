@@ -8,6 +8,7 @@ declare namespace Express {
 
 declare namespace NodeJS {
 	interface ProcessEnv {
+		NODE_ENV: string;
 		APP_PORT: number;
 		APP_URL: string;
 		CLIENT_URL: string;

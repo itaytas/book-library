@@ -15,7 +15,10 @@ export const bookController = {
 			const totalPages = Math.ceil(totalBooks / limitNumber);
 
 			res.status(StatusCodes.OK).json({
-				data: user.role === UserRole.CUSTOMER ? books.map(bookService.getBookDtoForCustomer) : books,
+				data:
+					user.role === UserRole.CUSTOMER
+						? await Promise.all(books.map(bookService.getBookDtoForCustomer))
+						: books,
 				pagination: {
 					currentPage: pageNumber,
 					totalPages,
@@ -42,7 +45,7 @@ export const bookController = {
 				return;
 			}
 			res.status(StatusCodes.OK).json(
-				user.role === UserRole.CUSTOMER ? bookService.getBookDtoForCustomer(book) : book
+				user.role === UserRole.CUSTOMER ? await bookService.getBookDtoForCustomer(book) : book
 			);
 		} catch (error) {
 			res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

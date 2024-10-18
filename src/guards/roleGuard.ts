@@ -13,7 +13,7 @@ export const roleGuard = {
       
       if (!user || !accessToken) { 
         res.status(StatusCodes.UNAUTHORIZED).json({
-          message: ReasonPhrases.UNAUTHORIZED,
+          message: "[Role Guard] Request has no user or accessToken" + `!user: ${!user} || !accessToken: ${!accessToken}`,
           status: StatusCodes.UNAUTHORIZED,
         })
         return;

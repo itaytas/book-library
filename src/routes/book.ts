@@ -1,15 +1,19 @@
 import { Router } from "express";
 import { bookController } from "../controllers";
-import { roleGuard } from "../guards";
+import { authGuard, roleGuard } from "../guards";
 
 export const books = (router: Router): void => {
-  // View all books - Customers can only view availability, Employees can edit details
-  router.get("/books", roleGuard.isCustomer, bookController.viewBooks);
-  router.get("/books/:id", roleGuard.isCustomer, bookController.viewBookDetails);
+	// Customers: View book availability (all books, but only availability details)
+	// Employees: Can view and edit book details
+	router.get("/books", authGuard.isAuth, bookController.viewBooks);
 
-  // Employees can edit book details
-  router.put("/books/:id", roleGuard.isEmployee, bookController.editBook);
+	// Customers: Can view specific book availability and when it will be available
+	// Employees: Can view specific book details
+	router.get("/books/:id", authGuard.isAuth, bookController.viewBookDetails);
 
-  // Prevent deletion of loaned books
-  router.delete("/books/:id", roleGuard.isEmployee, bookController.deleteBook);
+	// Employees can edit book details
+	router.put("/books/:id", roleGuard.isEmployee, bookController.editBook);
+
+	// Employees: Delete a book (assumption: deleting allowed, but not if it's loaned)
+	router.delete("/books/:id", roleGuard.isEmployee, bookController.deleteBook);
 };

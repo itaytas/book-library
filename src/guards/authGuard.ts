@@ -11,7 +11,7 @@ export const authGuard = {
 		}
 
 		res.status(StatusCodes.UNAUTHORIZED).json({
-			message: ReasonPhrases.UNAUTHORIZED,
+			message: "[authGuard] user is already authenticated",
 			status: StatusCodes.UNAUTHORIZED,
 		});
 	},
