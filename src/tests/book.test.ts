@@ -11,20 +11,6 @@ import { redis } from "../dataSource";
 import { authMiddleware } from "../middlewares";
 import { UserRole } from "../contracts/user";
 
-// jest.mock("../middlewares", () => ({
-// 	authMiddleware: jest.fn((req: Request, res: Response, next: NextFunction) => {
-// 		req.context = {
-// 			user: {
-// 				id: "67122ad0506974df0cd5a07c",
-// 				role: "customer",
-// 			},
-// 			accessToken:
-// 				"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MTIyYWQwNTA2OTc0ZGYwY2Q1YTA3YyIsImlhdCI6MTcyOTI0Mzg1NiwiZXhwIjoxNzI5MzMwMjU2fQ.4FQdaXRbF810dBxpdPWLeH8IqlXVBWN0cgsdjWx5mKg",
-// 		};
-// 		return next();
-// 	}),
-// }));
-
 jest.mock("../middlewares", () => {
 	return {
 		authMiddleware: jest.fn(
@@ -32,9 +18,9 @@ jest.mock("../middlewares", () => {
 				req: Request,
 				res: Response,
 				next: NextFunction,
-				userType: "employee" | "customer" = "customer"
+				userType: UserRole = UserRole.CUSTOMER
 			) => {
-				if (userType === "employee") {
+				if (userType === UserRole.EMPLOYEE) {
 					req.context = {
 						user: {
 							id: "671231a3a9749352ed487e3b",
