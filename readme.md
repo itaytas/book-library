@@ -255,6 +255,7 @@ These books are available for loan operations within the system.
     "rating": 4.5,
     "availableCopies": 5
   }
+  ```
   - **Response**:
   - **200 OK**: Successfully updated the book details
     ```json
