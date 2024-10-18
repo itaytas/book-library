@@ -1,8 +1,7 @@
 import request from "supertest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
-// import Redis from "ioredis-mock";
-import {createClient} from 'redis-mock'
+import Redis from "ioredis-mock";
 import { createServer } from "..";
 import { userService } from "../services";
 import { jwtSign } from "../utils/jwt";
@@ -11,7 +10,7 @@ import { Application } from "express";
 jest.mock("../dataSource", () => ({
 	redis: {
 		run: jest.fn(),
-		client: createClient(),
+		client: new Redis(),
 	},
 	mongoose: {
 		run: jest.fn(),
