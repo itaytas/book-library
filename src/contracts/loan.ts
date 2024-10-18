@@ -1,9 +1,9 @@
-import { Model, ObjectId } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export interface ILoan {
-  id: ObjectId;
-  user: ObjectId;
-  book: ObjectId;
+  id: Types.ObjectId;
+  user: Types.ObjectId;
+  book: Types.ObjectId;
   dueDate: Date;
   returned: boolean;
 }
@@ -13,10 +13,10 @@ export interface ILoanMethods {}
 export type LoanModel = Model<ILoan, unknown, ILoanMethods>;
 
 export interface LoanBookPayload {
-  userId: ObjectId;
-  bookId: ObjectId;
+  userId: Types.ObjectId;
+  bookId: Types.ObjectId;
 }
 
 export interface ReturnBookPayload {
-  loanId: ObjectId;
+  loanId: Types.ObjectId;
 }

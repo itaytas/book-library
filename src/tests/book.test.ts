@@ -3,9 +3,9 @@ import request from "supertest";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import Redis from "ioredis-mock";
 // import {createClient} from 'redis-mock'
-import mongoose from "mongoose";
+import mongoose, { Types } from 'mongoose';
 import { createServer } from "..";
-import { bookService, userService } from "../services";
+import { bookService, loanService, userService } from "../services";
 import { jwtSign, jwtVerify } from "../utils/jwt";
 import { redis } from "../dataSource";
 import { authMiddleware } from "../middlewares";
@@ -76,7 +76,9 @@ describe("Books Routes", () => {
 	let employeeToken: string = "";
 	let customerToken: string = "";
 	let employeeId: string = "";
+	let employeeObjectId: Types.ObjectId;
 	let customerId: string = "";
+	let customerObjectId: Types.ObjectId;
 
 	beforeAll(async () => {
 		mongoServer = await MongoMemoryServer.create();
@@ -100,14 +102,16 @@ describe("Books Routes", () => {
 		});
 
 		employeeId = employee.id;
+		employeeObjectId = employee._id;
 		employeeToken = jwtSign(employee.id).accessToken;
+
 		customerId = customer.id;
+		customerObjectId = customer._id;
 		customerToken = jwtSign(customer.id).accessToken;
 
 		if (redis.client) {
 			await redis.client.set(`expiredToken:${employeeToken}`, "true");
 			await redis.client.set(`expiredToken:${customerToken}`, "true");
-			const isAccessTokenExpired = await redis.client.get(`expiredToken:${customerToken}`);
 		}
 	});
 
@@ -141,25 +145,10 @@ describe("Books Routes", () => {
 				totalCopies: 0,
 			});
 
-			(authMiddleware as jest.Mock).mockImplementation(
-				(req: Request, res: Response, next: NextFunction) => {
-					req.context = {
-						user: {
-							// id: "67122ad0506974df0cd5a07c",
-							id: customerId,
-							role: UserRole.CUSTOMER,
-						},
-						accessToken: customerToken,
-						// "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MTIyYWQwNTA2OTc0ZGYwY2Q1YTA3YyIsImlhdCI6MTcyOTI0Mzg1NiwiZXhwIjoxNzI5MzMwMjU2fQ.4FQdaXRbF810dBxpdPWLeH8IqlXVBWN0cgsdjWx5mKg",
-					};
-					return next();
-				}
-			);
+			injectUserToRequest(customerId, customerToken, UserRole.CUSTOMER);
 
 			const headers = { Authorization: `Bearer ${customerToken}` };
 			const response = await request(app).get("/api/books").set(headers);
-
-			console.log("🚀 ~ it ~ response.body.data[0]:", response.body.data[0])
 
 			expect(response.status).toBe(200);
 			expect(response.body.data).toHaveLength(1);
@@ -175,25 +164,10 @@ describe("Books Routes", () => {
 				totalCopies: 2,
 			});
 
-			(authMiddleware as jest.Mock).mockImplementation(
-				(req: Request, res: Response, next: NextFunction) => {
-					req.context = {
-						user: {
-							// id: "67122ad0506974df0cd5a07c",
-							id: employeeId,
-							role: UserRole.EMPLOYEE,
-						},
-						accessToken: employeeId,
-						// "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MTIyYWQwNTA2OTc0ZGYwY2Q1YTA3YyIsImlhdCI6MTcyOTI0Mzg1NiwiZXhwIjoxNzI5MzMwMjU2fQ.4FQdaXRbF810dBxpdPWLeH8IqlXVBWN0cgsdjWx5mKg",
-					};
-					return next();
-				}
-			);
+			injectUserToRequest(employeeId, employeeToken, UserRole.EMPLOYEE);
 
 			const headers = { Authorization: `Bearer ${employeeToken}` };
-			const response = await request(app)
-				.get("/api/books")
-				.set(headers);
+			const response = await request(app).get("/api/books").set(headers);
 
 			expect(response.status).toBe(200);
 			expect(response.body.data).toHaveLength(1);
@@ -201,101 +175,138 @@ describe("Books Routes", () => {
 		});
 	});
 
-	// describe("GET /api/books/:id", () => {
-	// 	it("should return book details for a customer", async () => {
-	// 		const book = await bookService.addBook({
-	// 			title: "Moby Dick",
-	// 			author: "Herman Melville",
-	// 			genre: "Adventure",
-	// 			rating: 3,
-	// 			totalCopies: 2,
-	// 		});
+	describe("GET /api/books/:id", () => {
+		it("should return book details for a customer", async () => {
+			const book = await bookService.addBook({
+				title: "Moby Dick",
+				author: "Herman Melville",
+				genre: "Adventure",
+				rating: 3,
+				totalCopies: 2,
+			});
 
-	// 		const response = await request(app)
-	// 			.get(`/api/books/${book.id}`)
-	// 			.set("Authorization", `Bearer ${customerToken}`);
+			injectUserToRequest(customerId, customerToken, UserRole.CUSTOMER);
 
-	// 		expect(response.status).toBe(200);
-	// 		expect(response.body).toHaveProperty("title", "Book 1");
-	// 	});
+			const headers = { Authorization: `Bearer ${customerToken}` };
+			const response = await request(app).get(`/api/books/${book.id}`).set(headers);
 
-	// 	it("should return 404 if book is not found", async () => {
-	// 		const response = await request(app)
-	// 			.get("/api/books/60d021d95a632a001c6e1b2b")
-	// 			.set("Authorization", `Bearer ${customerToken}`);
+			expect(response.status).toBe(200);
+			expect(response.body).toHaveProperty("title", "Moby Dick");
+		});
 
-	// 		expect(response.status).toBe(404);
-	// 	});
-	// });
+		it("should return 404 if book is not found", async () => {
+			injectUserToRequest(customerId, customerToken, UserRole.CUSTOMER);
 
-	// describe("PUT /api/books/:id", () => {
-	// 	it("should allow an employee to edit a book", async () => {
-	// 		const book = await bookService.addBook({
-	// 			title: "Moby Dick",
-	// 			author: "Herman Melville",
-	// 			genre: "Adventure",
-	// 			rating: 3,
-	// 			totalCopies: 2,
-	// 		});
+			const headers = { Authorization: `Bearer ${customerToken}` };
+			const response = await request(app).get("/api/books/worngId").set(headers);
 
-	// 		const response = await request(app)
-	// 			.put(`/api/books/${book.id}`)
-	// 			.set("Authorization", `Bearer ${employeeToken}`)
-	// 			.send({ title: "Updated Title" });
+			expect(response.status).toBe(404);
+		});
 
-	// 		expect(response.status).toBe(200);
-	// 		expect(response.body.data).toHaveProperty("title", "Updated Title");
-	// 	});
+		it("should return 404 if book is not found", async () => {
+			injectUserToRequest(customerId, customerToken, UserRole.CUSTOMER);
 
-	// 	it("should return 403 if a customer tries to edit a book", async () => {
-	// 		const book = await bookService.addBook({
-	// 			title: "Moby Dick",
-	// 			author: "Herman Melville",
-	// 			genre: "Adventure",
-	// 			rating: 3,
-	// 			totalCopies: 2,
-	// 		});
+			const headers = { Authorization: `Bearer ${customerToken}` };
+			const response = await request(app).get("/api/books/60d021d95a632a001c6e1b2b").set(headers);
 
-	// 		const response = await request(app)
-	// 			.put(`/api/books/${book.id}`)
-	// 			.set("Authorization", `Bearer ${customerToken}`)
-	// 			.send({ title: "Updated Title" });
+			expect(response.status).toBe(404);
+		});
+	});
 
-	// 		expect(response.status).toBe(403);
-	// 	});
-	// });
+	describe("PUT /api/books/:id", () => {
+		it("should allow an employee to edit a book", async () => {
+			const book = await bookService.addBook({
+				title: "Moby Dick",
+				author: "Herman Melville",
+				genre: "Adventure",
+				rating: 3,
+				totalCopies: 2,
+			});
+			injectUserToRequest(employeeId, employeeToken, UserRole.EMPLOYEE);
+			const headers = { Authorization: `Bearer ${employeeToken}` };
 
-	// describe("DELETE /api/books/:id", () => {
-	// 	it("should allow an employee to delete a book if not loaned", async () => {
-	// 		const book = await bookService.addBook({
-	// 			title: "Moby Dick",
-	// 			author: "Herman Melville",
-	// 			genre: "Adventure",
-	// 			rating: 3,
-	// 			totalCopies: 2,
-	// 		});
+			const response = await request(app)
+				.put(`/api/books/${book.id}`)
+				.set(headers)
+				.send({ title: "Updated Title" });
 
-	// 		const response = await request(app)
-	// 			.delete(`/api/books/${book.id}`)
-	// 			.set("Authorization", `Bearer ${employeeToken}`);
+			expect(response.status).toBe(200);
+			expect(response.body.data).toHaveProperty("title", "Updated Title");
+		});
 
-	// 		expect(response.status).toBe(204);
-	// 	});
+		it("should return 403 if a customer tries to edit a book", async () => {
+			const book = await bookService.addBook({
+				title: "Moby Dick",
+				author: "Herman Melville",
+				genre: "Adventure",
+				rating: 3,
+				totalCopies: 2,
+			});
 
-	// 	it("should prevent deleting a loaned book", async () => {
-	// 		const book = await bookService.addBook({
-	// 			title: "Moby Dick",
-	// 			author: "Herman Melville",
-	// 			genre: "Adventure",
-	// 			rating: 3,
-	// 			totalCopies: 2,
-	// 		});
+			injectUserToRequest(customerId, customerToken, UserRole.CUSTOMER);
 
-	// 		const response = await request(app)
-	// 			.delete(`/api/books/${book.id}`)
-	// 			.set("Authorization", `Bearer ${employeeToken}`);
+			const headers = { Authorization: `Bearer ${customerToken}` };
+			const response = await request(app)
+				.put(`/api/books/${book.id}`)
+				.set(headers)
+				.send({ title: "Updated Title" });
 
-	// 		expect(response.status).toBe(409);
-	// 		expect(response.body.message).toBe("Cannot delete loaned book");
-	// 	});
+			expect(response.status).toBe(403);
+		});
+	});
+
+	describe("DELETE /api/books/:id", () => {
+		it("should allow an employee to delete a book if not loaned", async () => {
+			const book = await bookService.addBook({
+				title: "Moby Dick",
+				author: "Herman Melville",
+				genre: "Adventure",
+				rating: 3,
+				totalCopies: 2,
+			});
+
+			injectUserToRequest(employeeId, employeeToken, UserRole.EMPLOYEE);
+			const headers = { Authorization: `Bearer ${employeeToken}` };
+			const response = await request(app)
+				.delete(`/api/books/${book.id}`)
+				.set(headers);
+
+			expect(response.status).toBe(204);
+		});
+
+		it("should prevent deleting a loaned book", async () => {
+			const book = await bookService.addBook({
+				title: "Moby Dick",
+				author: "Herman Melville",
+				genre: "Adventure",
+				rating: 3,
+				totalCopies: 2,
+			});
+
+			const loan = await loanService.loanBook({userId: employeeObjectId, bookId: book._id})
+
+			injectUserToRequest(employeeId, employeeToken, UserRole.EMPLOYEE);
+			const headers = { Authorization: `Bearer ${employeeToken}` };
+
+			const response = await request(app)
+				.delete(`/api/books/${book.id}`)
+				.set(headers);
+
+			expect(response.status).toBe(409);
+			expect(response.body.message).toBe("Cannot delete loaned book");
+		});
+	});
 });
+
+function injectUserToRequest(userId: string, accessToken: string, role: UserRole) {
+	(authMiddleware as jest.Mock).mockImplementation((req: Request, res: Response, next: NextFunction) => {
+		req.context = {
+			user: {
+				id: userId,
+				role: role,
+			},
+			accessToken: accessToken,
+		};
+		return next();
+	});
+}

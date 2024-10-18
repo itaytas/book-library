@@ -46,6 +46,7 @@ export const loanController = {
 			const userId = user.id;
 			// const { bookId } = req.body;
 			const loan = await loanService.loanBook({ userId, bookId });
+			console.log(`🚀 ~ loanBook: ~ userId, bookId:`, userId, bookId)
 			res.status(StatusCodes.OK).json({
 				data: user.role === UserRole.CUSTOMER ? loanService.getLoanDtoForCustomer(loan) : loan,
 				message: "Book loaned successfully",

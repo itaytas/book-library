@@ -38,6 +38,13 @@ export const bookController = {
 
 	viewBookDetails: async ({ context, params: { id } }: Request, res: Response) => {
 		try {
+			if (!isValidObjectId(id)) {
+				res.status(StatusCodes.NOT_FOUND).json({
+					message: "Book not found",
+					status: StatusCodes.NOT_FOUND,
+				});
+				return;
+			}
 			const { user } = context as IUserRequest;
 			const book = await bookService.getBookById(id);
 			if (!book) {
